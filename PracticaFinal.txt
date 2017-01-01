@@ -1,0 +1,116 @@
+--Ejercicio 2
+
+-- Tipo A:
+-- USER SQL
+DROP CREATE USER usu_consulta IDENTIFIED BY adbd 
+DEFAULT TABLESPACE "MITBSPR"
+TEMPORARY TABLESPACE "TEMP";
+
+-- ROLES
+
+-- SYSTEM PRIVILEGES
+GRANT CREATE SESSION TO usu_consulta ;
+GRANT SELECT ON TREN TO  usu_consulta ;
+GRANT SELECT ON VIAJE TO  usu_consulta ;
+GRANT SELECT ON ACREDITACION TO  usu_consulta ;
+GRANT SELECT ON EMPLEADO TO  usu_consulta ;
+GRANT SELECT ON OPERACIONES TO  usu_consulta ;
+GRANT EXECUTE ANY PROCEDURE TO usu_consulta ;
+GRANT EXECUTE ANY FUNCTION TO usu_consulta ;
+
+-- QUOTAS
+
+-- Tipo B:
+
+-- USER SQL
+DROP CREATE USER usu_mtmto IDENTIFIED BY adbd 
+DEFAULT TABLESPACE "MITBSPR"
+TEMPORARY TABLESPACE "TEMP";
+
+-- ROLES
+
+-- SYSTEM PRIVILEGES
+
+GRANT CREATE SESSION TO usu_mtmto ;
+GRANT CREATE PROCEDURE TO usu_mtmto ;
+GRANT EXECUTE ANY PROCEDURE TO usu_mtmto ;
+GRANT EXECUTE ANY FUNCTION TO usu_mtmto ;
+GRANT SELECT ON TREN TO  usu_mtmto ;
+GRANT SELECT ON VIAJE TO  usu_mtmto ;
+GRANT SELECT ON ACREDITACION TO  usu_mtmto ;
+GRANT SELECT ON EMPLEADO TO  usu_mtmto ;
+GRANT UPDATE ON TREN TO usu_mtmto ;
+GRANT UPDATE ON VIAJE TO usu_mtmto ;
+GRANT UPDATE ON ACREDITACION TO usu_mtmto ;
+GRANT DELETE ON TREN TO usu_mtmto ;
+GRANT DELETE ON VIAJE TO usu_mtmto ;
+GRANT DELETE ON ACREDITACION TO usu_mtmto ;
+GRANT INSERT ON TREN TO usu_mtmto ;
+GRANT INSERT ON VIAJE TO usu_mtmto ;
+GRANT INSERT ON ACREDITACION TO usu_mtmto ;
+
+-- Tipo H:
+
+-- USER SQL
+DROP CREATE USER usu_rrhh IDENTIFIED BY adbd 
+DEFAULT TABLESPACE "MITBSPR"
+TEMPORARY TABLESPACE "TEMP";
+
+-- ROLES
+
+-- SYSTEM PRIVILEGES
+GRANT CREATE SESSION TO usu_rrhh ;
+GRANT CREATE PROCEDURE TO usu_rrhh ;
+GRANT EXECUTE ANY PROCEDURE TO usu_rrhh ;
+GRANT EXECUTE ANY FUNCTION TO usu_rrhh ;
+GRANT SELECT ON EMPLEADO TO  usu_rrhh ;
+GRANT INSERT ON TREN TO usu_rrhh ;
+GRANT UPDATE ON EMPLEADO TO usu_rrhh ;
+
+-- Ejercicio 5
+
+-- Consulta 1
+
+SELECT v.destino, t.tid
+FROM viaje v, tren tid, operaciones o
+WHERE v.origen = 'Madrid'
+AND o.vid = v.vid
+AND o.tid = t.tid;
+
+-- ¿Qué usuarios de los creados anteriormente pueden ejecutar ésta consulta?
+-- Tipo A: usu_consulta
+-- Plan de ejecucion: SET AUTOTRACE ON;
+-- CREATE INDEX origen_viaje ON viaje (origen);
+
+SELECT v.destino, t.tid
+FROM viaje v, tren tid, operaciones o
+AND o.vid = v.vid
+AND o.tid = t.tid
+AND v.origen = (SELECT vi.origen
+				FROM viaje vi
+				WHERE vi.origen ='Madrid');
+
+-- Consulta 2
+
+SELECT e.eid, v.origen, v.destino
+FROM empleado e, viaje v, acreditacion a, operaciones o 
+WHERE v.vid = o.vid
+AND o.tid = a.tid
+AND a.eid = e.eid
+AND e.salario > '50000';
+
+-- CREATE INDEX empleado_viaja ON viaje (vid);
+-- CREATE INDEX empleado_salario ON empleado (salario);
+
+-- Consulta 3
+
+SELECT e.nombre
+FROM empleado e, acreditacion a, tren t
+WHERE a.eid = a.tid
+AND t.tid = a.tid
+AND t.distancia > 1000
+AND 1 < (SELECT count(*)
+		 FROM empleado e1, acreditacion a1
+		 WHERE e1.eid = a1.eid);
+		 
+-- CREATE INDEX distancia_tren ON tren (distancia);

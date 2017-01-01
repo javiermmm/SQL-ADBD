@@ -1,0 +1,196 @@
+1) Nombres de partes que cuestan menos de 20 euros.
+SELECT	P.pname
+FROM	parts P
+WHERE	P.price < 20;
+
+PNAME                        
+------------------------------
+13GN3C10M030-1                 
+PPJUSB021 USB JACK             
+1GB PC2700S 333MHz DDR CL2.5   
+LHD HP 146GB SAS 10K 2.5       
+LAMP 3M X66                    
+HP HINGE RIGTH G62             
+
+ 6 filas seleccionadas 
+
+ 
+
+2) Nombres y ciudades de empleados que han realizado pedidos de piezas de precio superior a 20€
+SELECT	DISTINCT E.ename, Z.city
+FROM	Employees E, Zipcodes Z, Orders O, Odetails Od, Parts P
+WHERE	E.zip = Z.zip
+AND		E.eno = O.eno
+AND		O.ono = Od.ono
+AND		Od.pno = P.pno
+AND		P.price > 20;
+
+ENAME                          CITY                         
+------------------------------ ------------------------------
+Jones                          Wichita                        
+Smith                          Fort Dodge                     
+
+
+3) Nombres de clientes que han solicitado piezas a empleados que viven en Wichita 
+SELECT	DISTINCT C.cname
+FROM	Customers C, Odetails Od, Orders O, Employees E, Zipcodes Z
+WHERE	C.cno = O.cno
+AND		O.ono = Od.ono
+AND		O.eno = E.eno
+AND		E.zip = Z.zip
+AND		Z.city = 'Wichita'
+
+CNAME                        
+------------------------------
+Charles                        
+Barbara                        
+
+
+4) Nombres de clientes que solo han comprado a empleados de Wichita.
+SELECT	DISTINCT C.cname
+FROM	Customers C, Odetails Od, Orders O, Employees E, Zipcodes Z
+WHERE	C.cno = O.cno
+AND		O.ono = Od.ono
+AND		O.eno = E.eno
+AND		E.zip = Z.zip
+AND		Z.city = 'Wichita'
+AND		C.cname NOT IN (
+					SELECT	C.cname
+					FROM	Customers C, Odetails Od, Orders O, Employees E, Zipcodes Z
+					WHERE	C.cno = O.cno
+					AND		O.ono = Od.ono
+					AND		O.eno = E.eno
+					AND		E.zip = Z.zip
+					AND		Z.city <> 'Wichita'
+				)
+				
+CNAME                        
+------------------------------
+Charles                        
+Barbara                        
+
+
+5) Nombres de clientes que han comprado todas las  piezas de menos de 20€ 
+SELECT	DISTINCT C.cname
+FROM	Customers C, Parts P, Odetails Od, Orders O
+WHERE	C.cno = O.cno
+AND		Od.ono = O.ono
+AND		Od.pno = P.pno
+AND		P.pno NOT IN (
+					SELECT P.pno
+					FROM Parts p
+					WHERE P.price < 20
+				)
+					
+					
+SELECT		DISTINCT C.cname
+FROM		  Customers C, Parts P, Odetails Od, Orders O
+WHERE		  C.cno = O.cno
+AND			  Od.ono = O.ono
+AND			  Od.pno = P.pno
+AND       P.price < 20
+AND NOT EXISTS (  SELECT    P2.pno
+                  FROM      Parts P2
+                  WHERE     P2.price < 20
+                  AND       P2.pno NOT IN (  SELECT    P3.pno
+                                            FROM      Customers C, Parts P3, Odetails Od2, Orders O2
+                                            WHERE		  C.cno = O2.cno
+                                            AND			  Od2.ono = O2.ono
+                                            AND			  Od2.pno = P3.pno
+                  )
+)
+					
+6) Nombres de empleados y sus totales de ventas en el año 2095 (1995).
+SELECT		DISTINCT E.ename, sum(Od.qty * P.price) as TOTAL
+FROM		Employees E, Parts P, Orders O, Odetails Od
+WHERE		E.eno = O.eno
+AND			P.pno = Od.pno
+AND			Od.ono = O.ono
+AND			O.received >= '1/1/1995'
+AND			O.received <= '31/12/1995' 
+GROUP BY 	E.ENO, E.ename;
+
+ENAME                               TOTAL
+------------------------------ ----------
+Smith                               44,98
+Jones                               99,96
+
+
+
+7) Nombres y numeros de los empleados que nunca han vendido a un cliente de su codigo postal.
+SELECT	DISTINCT E.eno, E.ename
+FROM	  Employees E, Customers C, Orders O
+WHERE	  O.cno = C.cno
+AND		  O.eno = E.eno
+AND		  C.zip <> E.zip
+AND E.eno NOT IN (  SELECT	DISTINCT E.eno
+                    FROM	  Employees E, Customers C, Orders O
+                    WHERE	  O.cno = C.cno
+                    AND		  O.eno = E.eno
+                    AND		  C.zip = E.zip
+                    );
+
+       ENO ENAME                        
+---------- ------------------------------
+      1001 Smith                         
+
+
+8) Nombres de clientes que han realizado el mayor numero de pedidos.
+SELECT	  C.cname, COUNT(*) AS PEDIDOS
+FROM	    Customers C, Orders O
+WHERE	    C.cno = O.cno
+GROUP BY  C.cno, C.cname
+HAVING    Count(*) >= ALL ( SELECT	  COUNT(*)
+                            FROM	    Customers C, Orders O
+                            WHERE	    C.cno = O.cno
+                            GROUP BY  C.cno, C.cname
+                          );
+						  
+CNAME                             PEDIDOS
+------------------------------ ----------
+Charles                                 2
+
+
+9) Nombres de los clientes que han hecho los pedidos de mayor importe 
+SELECT	  C.cname, SUM (Od.QTY * P.price) AS IMPORTE_CADA_PEDIDO
+FROM	    Customers C, Orders O, Odetails Od, Parts P
+WHERE	    C.cno = O.cno
+AND       Od.ono = O.ono
+AND       P.pno = Od.pno
+GROUP BY  C.cno, P.pno, C.cname
+HAVING IMPORTE_CADA_PEDIDO >= ALL;
+
+10) Nombres de las piezas y numero total de pedidos en los que aparecen, en orden decreciente por numero de pedidos
+SELECT
+FROM
+WHERE
+
+12) Tiempo medioen numero de dias desde el envio de los pedidos hasta su recepción.
+SELECT
+FROM
+WHERE
+
+13) Numero de pedido y tiempo de espera de los pedidos de importe superior a 100€
+SELECT
+FROM
+WHERE
+
+
+
+1) Reduce un 15% el precio de laas piezas de coste inferior a 20€
+2) Actualiza la fecha de envio de los pedidos sin dicha fecha a la fecha de hoy 
+3) Disminuye 10€ el precio de las piezas cuyo coste esta por encima de la media 
+4) Borra todos los pedidos de los clientes de Wichita
+5) Borra los pedidos de los empleados que hayan realizado menos ventas (importe)
+
+
+
+1) Identificador (sid) de los estudiantes que no se han matriculado en nada en el cuatrimestre f96 
+2) Identificador (sid) de los estudiantes que se han matriculado en csc226 y  csc227.
+3) Identificador (sid) de los estudiantes que se han matriculado en todas las asignaturas
+4) Nombre de los estudiantes que se han matriculado en más asignaturas
+5) Nombre de los estudiantes que se han matriculado en menos asignaturas
+6) Nombre de los estudiantes que NO se han matriculado en ninguna asignatura
+7) Asignaturas en las qu se han matriculado 5 estudiantes o menos 
+8) Mostrar el cuatrimestre, nombre de curso, linea y numero junto con el numero de matriculados 
+
